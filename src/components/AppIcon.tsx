@@ -34,7 +34,12 @@ const AppIcon: React.FC<AppIconProps> = ({ app }) => {
             />
           </div>
         </TooltipTrigger>
-        <TooltipContent side="top" className="bg-neutral-900/95 backdrop-blur-sm text-white border-none p-3 rounded-lg shadow-xl z-50 max-w-xs animate-fade-in">
+        <TooltipContent 
+          side="top" 
+          className="bg-neutral-900/95 backdrop-blur-sm text-white border-none p-3 rounded-lg shadow-xl z-[100] max-w-xs animate-fade-in"
+          sideOffset={5}
+          avoidCollisions={true}
+        >
           <div className="flex flex-col gap-2">
             <div className="font-medium text-base">{app.name}</div>
             <div className="text-sm text-neutral-300">

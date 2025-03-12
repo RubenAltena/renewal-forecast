@@ -3,18 +3,22 @@ import React, { useState, useEffect } from "react";
 import MonthCard from "./MonthCard";
 import RenewalTable from "./RenewalTable";
 import YearSelector from "./YearSelector";
+import UpcomingRenewal from "./UpcomingRenewal";
 import { 
   AppRenewal, 
   generateYearlyRenewals, 
-  getRenewalsForMonth 
+  getRenewalsForMonth,
+  getNextUpcomingRenewal
 } from "@/utils/dummyData";
 
 const RenewalCalendar: React.FC = () => {
   const currentYear = new Date().getFullYear();
+  const currentMonth = new Date().getMonth();
   const [year, setYear] = useState(currentYear);
   const [renewals, setRenewals] = useState<AppRenewal[]>([]);
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [nextRenewal, setNextRenewal] = useState<AppRenewal | null>(null);
 
   // Generate renewals when the year changes
   useEffect(() => {
@@ -24,6 +28,7 @@ const RenewalCalendar: React.FC = () => {
     const timer = setTimeout(() => {
       const newRenewals = generateYearlyRenewals(year);
       setRenewals(newRenewals);
+      setNextRenewal(getNextUpcomingRenewal(newRenewals));
       setIsLoading(false);
     }, 600);
     
@@ -61,6 +66,16 @@ const RenewalCalendar: React.FC = () => {
         <YearSelector year={year} onChangeYear={handleYearChange} />
       </div>
       
+      {/* Next upcoming renewal */}
+      <div className="mb-8">
+        <h2 className="text-lg font-medium mb-3">Next Upcoming Renewal</h2>
+        {isLoading ? (
+          <div className="h-24 rounded-xl bg-neutral-100 animate-pulse" />
+        ) : (
+          <UpcomingRenewal renewal={nextRenewal} />
+        )}
+      </div>
+      
       {isLoading ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 animate-pulse">
           {months.map((month) => (
@@ -81,6 +96,7 @@ const RenewalCalendar: React.FC = () => {
                 year={year}
                 renewals={monthRenewals}
                 isActive={selectedMonth === month}
+                isCurrentMonth={month === currentMonth && year === currentYear}
                 onClick={() => monthRenewals.length > 0 && handleMonthClick(month)}
               />
             );

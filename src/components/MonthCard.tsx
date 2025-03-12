@@ -1,6 +1,6 @@
 
 import React from "react";
-import { AppRenewal, getMonthName } from "@/utils/dummyData";
+import { AppRenewal, getMonthName, formatPrice } from "@/utils/dummyData";
 import AppIcon from "./AppIcon";
 import { cn } from "@/lib/utils";
 
@@ -9,6 +9,7 @@ interface MonthCardProps {
   year: number;
   renewals: AppRenewal[];
   isActive: boolean;
+  isCurrentMonth: boolean;
   onClick: () => void;
 }
 
@@ -17,30 +18,54 @@ const MonthCard: React.FC<MonthCardProps> = ({
   year,
   renewals,
   isActive,
+  isCurrentMonth,
   onClick,
 }) => {
   const hasRenewals = renewals.length > 0;
+  const totalAmount = renewals.reduce((sum, renewal) => sum + renewal.price, 0);
 
   return (
     <div
       className={cn(
-        "relative rounded-xl border backdrop-blur-sm overflow-hidden transition-all duration-300 ease-in-out cursor-pointer",
+        "relative rounded-xl border backdrop-blur-sm overflow-hidden transition-all duration-300 ease-in-out",
+        hasRenewals ? "cursor-pointer" : "cursor-default",
         isActive
           ? "bg-calendar-active-month border-primary/30 shadow-lg shadow-primary/5"
+          : isCurrentMonth
+          ? "bg-green-50/90 border-green-200 shadow-md shadow-green-100/30"
           : "bg-white/80 border-neutral-200 hover:bg-calendar-month-hover",
         "flex flex-col h-full"
       )}
-      onClick={onClick}
+      onClick={() => hasRenewals && onClick()}
     >
+      {isCurrentMonth && !isActive && (
+        <div className="absolute top-2 right-2">
+          <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+            Current
+          </span>
+        </div>
+      )}
+
       <div className="p-4 bg-gradient-to-b from-white/5 to-transparent border-b border-neutral-200/30">
-        <h3 className="text-lg font-medium">{getMonthName(month)}</h3>
-        {hasRenewals ? (
-          <p className="text-sm text-muted-foreground mt-1">
-            {renewals.length} {renewals.length === 1 ? "renewal" : "renewals"}
-          </p>
-        ) : (
-          <p className="text-sm text-muted-foreground mt-1">No renewals</p>
-        )}
+        <div className="flex justify-between items-start">
+          <div>
+            <h3 className="text-lg font-medium">{getMonthName(month)}</h3>
+            {hasRenewals ? (
+              <p className="text-sm text-muted-foreground mt-1">
+                {renewals.length} {renewals.length === 1 ? "renewal" : "renewals"}
+              </p>
+            ) : (
+              <p className="text-sm text-muted-foreground mt-1">No renewals</p>
+            )}
+          </div>
+          {hasRenewals && (
+            <div className="text-right">
+              <span className="text-sm font-medium text-primary">
+                {formatPrice(totalAmount)}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
       <div className="p-4 flex-1">

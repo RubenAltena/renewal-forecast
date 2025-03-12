@@ -11,7 +11,9 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { X, Search, ArrowUpDown, Download } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { X, Search, ArrowUpDown, Download, BarChart } from "lucide-react";
+import UsageDisplay from "./UsageDisplay";
 
 interface RenewalTableProps {
   month: number;
@@ -24,6 +26,7 @@ const RenewalTable: React.FC<RenewalTableProps> = ({ month, year, renewals, onCl
   const [searchTerm, setSearchTerm] = useState("");
   const [sortField, setSortField] = useState<keyof AppRenewal>("renewalDate");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [selectedApp, setSelectedApp] = useState<AppRenewal | null>(null);
 
   // Filter renewals based on search term
   const filteredRenewals = renewals.filter(
@@ -50,6 +53,11 @@ const RenewalTable: React.FC<RenewalTableProps> = ({ month, year, renewals, onCl
       return sortDirection === "asc"
         ? a.category.localeCompare(b.category)
         : b.category.localeCompare(a.category);
+    } else if (sortField === "status") {
+      const statusOrder = { "coming up": 0, "in progress": 1, "recently done": 2 };
+      return sortDirection === "asc"
+        ? statusOrder[a.status] - statusOrder[b.status]
+        : statusOrder[b.status] - statusOrder[a.status];
     }
     return 0;
   });
@@ -72,6 +80,30 @@ const RenewalTable: React.FC<RenewalTableProps> = ({ month, year, renewals, onCl
         className={`ml-1 h-4 w-4 inline ${sortDirection === "desc" ? "transform rotate-180" : ""}`} 
       />
     );
+  };
+
+  // Get badge color based on status
+  const getStatusBadge = (status: string) => {
+    switch (status) {
+      case "coming up":
+        return <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50">Coming Up</Badge>;
+      case "in progress":
+        return <Badge variant="outline" className="bg-amber-50 text-amber-700 hover:bg-amber-50">In Progress</Badge>;
+      case "recently done":
+        return <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50">Recently Done</Badge>;
+      default:
+        return <Badge variant="outline">{status}</Badge>;
+    }
+  };
+
+  // Handle app click for usage view
+  const handleAppClick = (app: AppRenewal) => {
+    setSelectedApp(app);
+  };
+
+  // Close usage display
+  const handleCloseUsage = () => {
+    setSelectedApp(null);
   };
 
   return (
@@ -104,74 +136,100 @@ const RenewalTable: React.FC<RenewalTableProps> = ({ month, year, renewals, onCl
           </div>
         </div>
         
-        <div className="overflow-auto flex-grow">
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead className="w-12"></TableHead>
-                <TableHead 
-                  className="cursor-pointer hover:text-primary transition-colors"
-                  onClick={() => toggleSort("name")}
-                >
-                  Application {renderSortIcon("name")}
-                </TableHead>
-                <TableHead 
-                  className="cursor-pointer hover:text-primary transition-colors"
-                  onClick={() => toggleSort("category")}
-                >
-                  Category {renderSortIcon("category")}
-                </TableHead>
-                <TableHead 
-                  className="cursor-pointer hover:text-primary transition-colors"
-                  onClick={() => toggleSort("renewalDate")}
-                >
-                  Renewal Date {renderSortIcon("renewalDate")}
-                </TableHead>
-                <TableHead 
-                  className="text-right cursor-pointer hover:text-primary transition-colors"
-                  onClick={() => toggleSort("price")}
-                >
-                  Price {renderSortIcon("price")}
-                </TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {sortedRenewals.length > 0 ? (
-                sortedRenewals.map((renewal) => (
-                  <TableRow key={renewal.id} className="group">
-                    <TableCell className="w-12">
-                      <div className="w-8 h-8 overflow-hidden rounded-md bg-white border flex items-center justify-center">
-                        <img 
-                          src={renewal.icon} 
-                          alt={`${renewal.name} logo`} 
-                          className="w-6 h-6 object-contain"
-                        />
-                      </div>
-                    </TableCell>
-                    <TableCell className="font-medium">{renewal.name}</TableCell>
-                    <TableCell>{renewal.category}</TableCell>
-                    <TableCell>{formatRenewalDate(renewal.renewalDate)}</TableCell>
-                    <TableCell className="text-right">{formatPrice(renewal.price)}</TableCell>
-                  </TableRow>
-                ))
-              ) : (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-8 text-muted-foreground">
-                    No renewals found
-                  </TableCell>
-                </TableRow>
-              )}
-            </TableBody>
-          </Table>
-        </div>
-        <div className="p-4 border-t bg-muted/20">
-          <div className="flex items-center justify-between text-sm text-muted-foreground">
-            <span>Total: {filteredRenewals.length} renewals</span>
-            <span>
-              Total amount: {formatPrice(filteredRenewals.reduce((sum, app) => sum + app.price, 0))}
-            </span>
+        {selectedApp ? (
+          <div className="flex-grow overflow-auto p-4">
+            <UsageDisplay app={selectedApp} onClose={handleCloseUsage} />
           </div>
-        </div>
+        ) : (
+          <>
+            <div className="overflow-auto flex-grow">
+              <Table>
+                <TableHeader>
+                  <TableRow>
+                    <TableHead className="w-12"></TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:text-primary transition-colors"
+                      onClick={() => toggleSort("name")}
+                    >
+                      Application {renderSortIcon("name")}
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:text-primary transition-colors"
+                      onClick={() => toggleSort("category")}
+                    >
+                      Category {renderSortIcon("category")}
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:text-primary transition-colors"
+                      onClick={() => toggleSort("status")}
+                    >
+                      Status {renderSortIcon("status")}
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:text-primary transition-colors"
+                      onClick={() => toggleSort("renewalDate")}
+                    >
+                      Renewal Date {renderSortIcon("renewalDate")}
+                    </TableHead>
+                    <TableHead 
+                      className="text-right cursor-pointer hover:text-primary transition-colors"
+                      onClick={() => toggleSort("price")}
+                    >
+                      Price {renderSortIcon("price")}
+                    </TableHead>
+                    <TableHead className="w-10"></TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {sortedRenewals.length > 0 ? (
+                    sortedRenewals.map((renewal) => (
+                      <TableRow key={renewal.id} className="group">
+                        <TableCell className="w-12">
+                          <div className="w-8 h-8 overflow-hidden rounded-md bg-white border flex items-center justify-center">
+                            <img 
+                              src={renewal.icon} 
+                              alt={`${renewal.name} logo`} 
+                              className="w-6 h-6 object-contain"
+                            />
+                          </div>
+                        </TableCell>
+                        <TableCell className="font-medium">{renewal.name}</TableCell>
+                        <TableCell>{renewal.category}</TableCell>
+                        <TableCell>{getStatusBadge(renewal.status)}</TableCell>
+                        <TableCell>{formatRenewalDate(renewal.renewalDate)}</TableCell>
+                        <TableCell className="text-right">{formatPrice(renewal.price)}</TableCell>
+                        <TableCell>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="opacity-0 group-hover:opacity-100 transition-opacity"
+                            onClick={() => handleAppClick(renewal)}
+                          >
+                            <BarChart className="h-4 w-4" />
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    ))
+                  ) : (
+                    <TableRow>
+                      <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
+                        No renewals found
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </TableBody>
+              </Table>
+            </div>
+            <div className="p-4 border-t bg-muted/20">
+              <div className="flex items-center justify-between text-sm text-muted-foreground">
+                <span>Total: {filteredRenewals.length} renewals</span>
+                <span>
+                  Total amount: {formatPrice(filteredRenewals.reduce((sum, app) => sum + app.price, 0))}
+                </span>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
