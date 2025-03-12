@@ -4,9 +4,6 @@ import MonthCard from "./MonthCard";
 import RenewalTable from "./RenewalTable";
 import YearSelector from "./YearSelector";
 import UpcomingRenewal from "./UpcomingRenewal";
-import ContractOptimization from "./ContractOptimization";
-import RenewalNotifications from "./RenewalNotifications";
-import BudgetImpact from "./BudgetImpact";
 import { 
   AppRenewal, 
   generateYearlyRenewals, 
@@ -71,27 +68,10 @@ const RenewalCalendar: React.FC = () => {
   const months = Array.from({ length: 12 }, (_, i) => i);
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 py-8">
+    <div className="w-full max-w-7xl mx-auto">
       <div className="mb-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <h1 className="text-3xl font-semibold">Renewal Calendar</h1>
         <YearSelector year={year} onChangeYear={handleYearChange} />
-      </div>
-      
-      {/* AI Insights and Data Analysis Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-8">
-        {isLoading ? (
-          <>
-            <div className="h-96 rounded-xl bg-neutral-100 animate-pulse" />
-            <div className="h-96 rounded-xl bg-neutral-100 animate-pulse" />
-            <div className="h-96 rounded-xl bg-neutral-100 animate-pulse" />
-          </>
-        ) : (
-          <>
-            <ContractOptimization renewals={renewals} onSelectApp={handleAppSelect} />
-            <RenewalNotifications renewals={renewals} onSelectApp={handleAppSelect} />
-            <BudgetImpact renewals={renewals} />
-          </>
-        )}
       </div>
       
       {/* Next upcoming renewal */}
