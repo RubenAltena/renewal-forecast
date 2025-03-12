@@ -38,14 +38,6 @@ const MonthCard: React.FC<MonthCardProps> = ({
       )}
       onClick={() => hasRenewals && onClick()}
     >
-      {isCurrentMonth && !isActive && (
-        <div className="absolute top-2 right-2">
-          <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-            Current
-          </span>
-        </div>
-      )}
-
       <div className="p-4 bg-gradient-to-b from-white/5 to-transparent border-b border-neutral-200/30">
         <div className="flex justify-between items-start">
           <div>
@@ -81,6 +73,14 @@ const MonthCard: React.FC<MonthCardProps> = ({
           </div>
         )}
       </div>
+      
+      {isCurrentMonth && !isActive && (
+        <div className="absolute bottom-2 right-2">
+          <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
+            Current
+          </span>
+        </div>
+      )}
     </div>
   );
 };

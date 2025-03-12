@@ -1,4 +1,3 @@
-
 import { format } from "date-fns";
 
 export interface AppRenewal {
@@ -145,9 +144,9 @@ export const formatRenewalDate = (date: Date): string => {
 
 // Function to format price
 export const formatPrice = (price: number): string => {
-  return new Intl.NumberFormat('en-US', {
+  return new Intl.NumberFormat('de-DE', {
     style: 'currency',
-    currency: 'USD',
+    currency: 'EUR',
   }).format(price);
 };
 
@@ -155,4 +154,3 @@ export const formatPrice = (price: number): string => {
 export const getMonthName = (month: number): string => {
   return new Date(2000, month, 1).toLocaleString('default', { month: 'long' });
 };
-
