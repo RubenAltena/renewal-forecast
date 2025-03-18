@@ -63,20 +63,23 @@ const InsightsSection: React.FC = () => {
             msOverflowStyle: 'none'
           }}
         >
-          <ContractOptimization 
-            renewals={renewals} 
-            onSelectApp={handleSelectApp} 
-            className="min-w-[300px] md:min-w-[380px] flex-shrink-0"
-          />
-          <RenewalNotifications 
-            renewals={renewals} 
-            onSelectApp={handleSelectApp} 
-            className="min-w-[300px] md:min-w-[380px] flex-shrink-0"
-          />
-          <BudgetImpact 
-            renewals={renewals} 
-            className="min-w-[300px] md:min-w-[380px] flex-shrink-0"
-          />
+          <div className="min-w-[300px] md:min-w-[380px] flex-shrink-0">
+            <ContractOptimization 
+              renewals={renewals} 
+              onSelectApp={handleSelectApp}
+            />
+          </div>
+          <div className="min-w-[300px] md:min-w-[380px] flex-shrink-0">
+            <RenewalNotifications 
+              renewals={renewals} 
+              onSelectApp={handleSelectApp}
+            />
+          </div>
+          <div className="min-w-[300px] md:min-w-[380px] flex-shrink-0">
+            <BudgetImpact 
+              renewals={renewals}
+            />
+          </div>
           {/* Additional cards can be added here */}
         </div>
       </div>
