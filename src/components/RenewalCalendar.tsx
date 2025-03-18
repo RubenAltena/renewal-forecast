@@ -19,7 +19,6 @@ const RenewalCalendar: React.FC = () => {
   const [selectedMonth, setSelectedMonth] = useState<number | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [nextRenewal, setNextRenewal] = useState<AppRenewal | null>(null);
-  const [selectedApp, setSelectedApp] = useState<AppRenewal | null>(null);
 
   // Generate renewals when the year changes
   useEffect(() => {
@@ -50,13 +49,6 @@ const RenewalCalendar: React.FC = () => {
   const handleYearChange = (newYear: number) => {
     setYear(newYear);
     setSelectedMonth(null);
-  };
-
-  // Handle app selection for details view
-  const handleAppSelect = (app: AppRenewal) => {
-    setSelectedApp(app);
-    // When an app is selected from AI insights, also open its month
-    setSelectedMonth(app.renewalDate.getMonth());
   };
 
   // Get renewals for a specific month

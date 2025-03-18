@@ -74,13 +74,7 @@ const MonthCard: React.FC<MonthCardProps> = ({
         )}
       </div>
       
-      {isCurrentMonth && !isActive && (
-        <div className="absolute bottom-2 right-2">
-          <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-            Current
-          </span>
-        </div>
-      )}
+      {/* Removed the "Current" label for current month as requested */}
     </div>
   );
 };

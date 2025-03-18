@@ -25,6 +25,11 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({ app, onClose }) => {
   const moderatePercentage = (moderatelyActiveUsers / totalUsers) * 100;
   const inactivePercentage = (inactiveUsers / totalUsers) * 100;
   
+  // Calculate unassigned licenses
+  const totalAssigned = activeUsers + moderatelyActiveUsers + inactiveUsers;
+  const unassignedLicenses = totalUsers - totalAssigned;
+  const unassignedPercentage = unassignedLicenses > 0 ? (unassignedLicenses / totalUsers) * 100 : 0;
+  
   return (
     <div className="bg-white rounded-xl p-6 max-w-md w-full mx-auto">
       <div className="flex justify-between items-center mb-6">
@@ -52,7 +57,7 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({ app, onClose }) => {
             <span className="text-2xl font-bold">{totalUsers}</span>
           </div>
           
-          <div className="h-8 rounded-full overflow-hidden flex">
+          <div className="h-8 rounded-full overflow-hidden flex w-full">
             <div 
               className="bg-green-300 h-full" 
               style={{ width: `${activePercentage}%` }}
@@ -65,9 +70,15 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({ app, onClose }) => {
               className="bg-red-200 h-full" 
               style={{ width: `${inactivePercentage}%` }}
             />
+            {unassignedLicenses > 0 && (
+              <div 
+                className="bg-gray-200 h-full" 
+                style={{ width: `${unassignedPercentage}%` }}
+              />
+            )}
           </div>
           
-          <div className="grid grid-cols-3 gap-4 mt-4">
+          <div className="grid grid-cols-4 gap-2 mt-4">
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-green-300"></div>
               <div className="text-sm">
@@ -78,7 +89,7 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({ app, onClose }) => {
             <div className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full bg-orange-200"></div>
               <div className="text-sm">
-                <div>Moderately Active Users</div>
+                <div>Moderately Active</div>
                 <div className="font-medium">{moderatelyActiveUsers}</div>
               </div>
             </div>
@@ -87,6 +98,13 @@ const UsageDisplay: React.FC<UsageDisplayProps> = ({ app, onClose }) => {
               <div className="text-sm">
                 <div>Inactive Users</div>
                 <div className="font-medium">{inactiveUsers}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-gray-200"></div>
+              <div className="text-sm">
+                <div>Unassigned</div>
+                <div className="font-medium">{unassignedLicenses}</div>
               </div>
             </div>
           </div>

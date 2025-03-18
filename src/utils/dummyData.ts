@@ -1,4 +1,5 @@
 import { format } from "date-fns";
+import { realAppData, getRandomApp } from "./realAppData";
 
 export interface AppRenewal {
   id: string;
@@ -105,68 +106,42 @@ const generateAIInsights = (price: number, name: string, category: string): AppR
 
 // Function to generate app renewals for the entire year
 export const generateYearlyRenewals = (year: number): AppRenewal[] => {
-  const appIcons = [
-    "https://cdn-icons-png.flaticon.com/512/5968/5968705.png", // Slack
-    "https://cdn-icons-png.flaticon.com/512/5968/5968875.png", // Jira
-    "https://cdn-icons-png.flaticon.com/512/5968/5968853.png", // Gmail
-    "https://cdn-icons-png.flaticon.com/512/5968/5968756.png", // Trello
-    "https://cdn-icons-png.flaticon.com/512/5968/5968933.png", // Github
-    "https://cdn-icons-png.flaticon.com/512/5968/5968672.png", // Figma
-    "https://cdn-icons-png.flaticon.com/512/5968/5968759.png", // Adobe XD
-    "https://cdn-icons-png.flaticon.com/512/5968/5968520.png", // Dropbox
-    "https://cdn-icons-png.flaticon.com/512/5968/5968885.png", // Microsoft Teams
-    "https://cdn-icons-png.flaticon.com/512/5968/5968472.png", // Zoom
-    "https://cdn-icons-png.flaticon.com/512/5968/5968817.png", // Notion
-    "https://cdn-icons-png.flaticon.com/512/5968/5968866.png", // Google Drive
-  ];
-  
-  const appNames = [
-    "Slack", "Jira", "Gmail", "Trello", "GitHub", "Figma", 
-    "Adobe XD", "Dropbox", "MS Teams", "Zoom", "Notion", "Google Drive",
-    "Asana", "Monday", "Basecamp", "HubSpot", "Salesforce", "Zendesk",
-    "QuickBooks", "Mailchimp", "Airtable", "Canva", "InVision", "Miro",
-    "AWS", "Azure", "GCP", "DocuSign", "PagerDuty", "Okta",
-    "Atlassian", "Box", "Zapier", "Intercom", "Amplitude", "ClickUp"
-  ];
-  
-  const categories = [
-    "Communication", "Project Management", "Design", "Development", 
-    "Marketing", "Finance", "HR", "Customer Support", "Productivity",
-    "Infrastructure", "Security", "Analytics"
-  ];
-  
   const renewals: AppRenewal[] = [];
+  const usedAppNames = new Set<string>();
   
   for (let month = 0; month < 12; month++) {
-    if (month === 7) continue;
+    if (month === 7) continue; // Skip month 7 (August) as in the original code
     
     const renewalsThisMonth = Math.floor(Math.random() * 5) + 3;
     
     for (let i = 0; i < renewalsThisMonth; i++) {
-      const appNameIndex = Math.floor(Math.random() * appNames.length);
-      const appName = appNames[appNameIndex];
+      let appInfo = getRandomApp();
       
-      appNames.splice(appNameIndex, 1);
+      // Ensure unique app names across the calendar
+      while (usedAppNames.has(appInfo.name)) {
+        appInfo = getRandomApp();
+        // If we've used all apps, break out of the loop
+        if (usedAppNames.size >= realAppData.length) break;
+      }
       
-      if (appNames.length === 0) break;
+      if (usedAppNames.size >= realAppData.length) break;
       
-      const iconIndex = Math.floor(Math.random() * appIcons.length);
-      const categoryIndex = Math.floor(Math.random() * categories.length);
+      usedAppNames.add(appInfo.name);
+      
       const renewalDate = getRandomDateInMonth(year, month);
       const price = Math.floor(Math.random() * 950) + 50;
-      const category = categories[categoryIndex];
       
       renewals.push({
         id: `app-${month}-${i}`,
-        name: appName,
-        icon: appIcons[iconIndex],
+        name: appInfo.name,
+        icon: appInfo.icon,
         price: price,
         renewalDate: renewalDate,
         billingCycle: ["monthly", "quarterly", "annual"][Math.floor(Math.random() * 3)] as "monthly" | "quarterly" | "annual",
-        category: category,
+        category: appInfo.category,
         status: getRenewalStatus(renewalDate),
         usageData: generateUsageData(),
-        aiInsights: generateAIInsights(price, appName, category)
+        aiInsights: generateAIInsights(price, appInfo.name, appInfo.category)
       });
     }
   }
@@ -202,9 +177,10 @@ export const formatPrice = (price: number): string => {
   }).format(price);
 };
 
-// Get month name
+// Get month name with first letter capitalized
 export const getMonthName = (month: number): string => {
-  return new Date(2000, month, 1).toLocaleString('default', { month: 'long' });
+  const monthName = new Date(2000, month, 1).toLocaleString('default', { month: 'long' });
+  return monthName.charAt(0).toUpperCase() + monthName.slice(1);
 };
 
 // Calculate total annual cost of all renewals
