@@ -11,8 +11,7 @@ import {
 } from "@/components/ui/table";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { X, Search, ArrowUpDown, Download, BarChart } from "lucide-react";
+import { X, Search, ArrowUpDown, Download, Users } from "lucide-react";
 import UsageDisplay from "./UsageDisplay";
 
 interface RenewalTableProps {
@@ -24,15 +23,14 @@ interface RenewalTableProps {
 
 const RenewalTable: React.FC<RenewalTableProps> = ({ month, year, renewals, onClose }) => {
   const [searchTerm, setSearchTerm] = useState("");
-  const [sortField, setSortField] = useState<keyof AppRenewal>("renewalDate");
+  const [sortField, setSortField] = useState<keyof AppRenewal | "usage" | "unassignedLicenses" | "billingCycle">("renewalDate");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [selectedApp, setSelectedApp] = useState<AppRenewal | null>(null);
 
   // Filter renewals based on search term
   const filteredRenewals = renewals.filter(
     (renewal) =>
-      renewal.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      renewal.category.toLowerCase().includes(searchTerm.toLowerCase())
+      renewal.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   // Sort renewals
@@ -49,21 +47,30 @@ const RenewalTable: React.FC<RenewalTableProps> = ({ month, year, renewals, onCl
       return sortDirection === "asc"
         ? a.name.localeCompare(b.name)
         : b.name.localeCompare(a.name);
-    } else if (sortField === "category") {
+    } else if (sortField === "billingCycle") {
       return sortDirection === "asc"
-        ? a.category.localeCompare(b.category)
-        : b.category.localeCompare(a.category);
-    } else if (sortField === "status") {
-      const statusOrder = { "coming up": 0, "in progress": 1, "recently done": 2 };
+        ? a.billingCycle.localeCompare(b.billingCycle)
+        : b.billingCycle.localeCompare(a.billingCycle);
+    } else if (sortField === "usage" && a.usageData && b.usageData) {
+      const aUsagePercent = a.usageData.activeUsers / a.usageData.totalUsers;
+      const bUsagePercent = b.usageData.activeUsers / b.usageData.totalUsers;
       return sortDirection === "asc"
-        ? statusOrder[a.status] - statusOrder[b.status]
-        : statusOrder[b.status] - statusOrder[a.status];
+        ? aUsagePercent - bUsagePercent
+        : bUsagePercent - aUsagePercent;
+    } else if (sortField === "unassignedLicenses" && a.usageData && b.usageData) {
+      const aUnassigned = a.usageData.totalUsers - 
+        (a.usageData.activeUsers + a.usageData.moderatelyActiveUsers + a.usageData.inactiveUsers);
+      const bUnassigned = b.usageData.totalUsers - 
+        (b.usageData.activeUsers + b.usageData.moderatelyActiveUsers + b.usageData.inactiveUsers);
+      return sortDirection === "asc"
+        ? aUnassigned - bUnassigned
+        : bUnassigned - aUnassigned;
     }
     return 0;
   });
 
   // Toggle sort direction
-  const toggleSort = (field: keyof AppRenewal) => {
+  const toggleSort = (field: typeof sortField) => {
     if (sortField === field) {
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
@@ -73,7 +80,7 @@ const RenewalTable: React.FC<RenewalTableProps> = ({ month, year, renewals, onCl
   };
 
   // Render sort icon
-  const renderSortIcon = (field: keyof AppRenewal) => {
+  const renderSortIcon = (field: typeof sortField) => {
     if (sortField !== field) return null;
     return (
       <ArrowUpDown 
@@ -82,18 +89,15 @@ const RenewalTable: React.FC<RenewalTableProps> = ({ month, year, renewals, onCl
     );
   };
 
-  // Get badge color based on status
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "coming up":
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 hover:bg-blue-50">Coming Up</Badge>;
-      case "in progress":
-        return <Badge variant="outline" className="bg-amber-50 text-amber-700 hover:bg-amber-50">In Progress</Badge>;
-      case "recently done":
-        return <Badge variant="outline" className="bg-green-50 text-green-700 hover:bg-green-50">Recently Done</Badge>;
-      default:
-        return <Badge variant="outline">{status}</Badge>;
-    }
+  // Calculate usage statistics
+  const getUsageStats = (app: AppRenewal) => {
+    if (!app.usageData) return { activePercent: 0, unassigned: 0 };
+    
+    const { totalUsers, activeUsers, moderatelyActiveUsers, inactiveUsers } = app.usageData;
+    const activePercent = Math.round((activeUsers / totalUsers) * 100);
+    const unassigned = totalUsers - (activeUsers + moderatelyActiveUsers + inactiveUsers);
+    
+    return { activePercent, unassigned };
   };
 
   // Handle app click for usage view
@@ -123,7 +127,7 @@ const RenewalTable: React.FC<RenewalTableProps> = ({ month, year, renewals, onCl
             <div className="relative flex-grow">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Search by name or category..."
+                placeholder="Search by name..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-9"
@@ -155,15 +159,9 @@ const RenewalTable: React.FC<RenewalTableProps> = ({ month, year, renewals, onCl
                     </TableHead>
                     <TableHead 
                       className="cursor-pointer hover:text-primary transition-colors"
-                      onClick={() => toggleSort("category")}
+                      onClick={() => toggleSort("billingCycle")}
                     >
-                      Category {renderSortIcon("category")}
-                    </TableHead>
-                    <TableHead 
-                      className="cursor-pointer hover:text-primary transition-colors"
-                      onClick={() => toggleSort("status")}
-                    >
-                      Status {renderSortIcon("status")}
+                      Billing Frequency {renderSortIcon("billingCycle")}
                     </TableHead>
                     <TableHead 
                       className="cursor-pointer hover:text-primary transition-colors"
@@ -172,44 +170,65 @@ const RenewalTable: React.FC<RenewalTableProps> = ({ month, year, renewals, onCl
                       Renewal Date {renderSortIcon("renewalDate")}
                     </TableHead>
                     <TableHead 
+                      className="cursor-pointer hover:text-primary transition-colors"
+                      onClick={() => toggleSort("usage")}
+                    >
+                      Usage {renderSortIcon("usage")}
+                    </TableHead>
+                    <TableHead 
+                      className="cursor-pointer hover:text-primary transition-colors"
+                      onClick={() => toggleSort("unassignedLicenses")}
+                    >
+                      Unassigned {renderSortIcon("unassignedLicenses")}
+                    </TableHead>
+                    <TableHead 
                       className="text-right cursor-pointer hover:text-primary transition-colors"
                       onClick={() => toggleSort("price")}
                     >
                       Price {renderSortIcon("price")}
                     </TableHead>
-                    <TableHead className="w-10"></TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {sortedRenewals.length > 0 ? (
-                    sortedRenewals.map((renewal) => (
-                      <TableRow key={renewal.id} className="group">
-                        <TableCell className="w-12">
-                          <div className="w-8 h-8 overflow-hidden rounded-md bg-white border flex items-center justify-center">
-                            <img 
-                              src={renewal.icon} 
-                              alt={`${renewal.name} logo`} 
-                              className="w-6 h-6 object-contain"
-                            />
-                          </div>
-                        </TableCell>
-                        <TableCell className="font-medium">{renewal.name}</TableCell>
-                        <TableCell>{renewal.category}</TableCell>
-                        <TableCell>{getStatusBadge(renewal.status)}</TableCell>
-                        <TableCell>{formatRenewalDate(renewal.renewalDate)}</TableCell>
-                        <TableCell className="text-right">{formatPrice(renewal.price)}</TableCell>
-                        <TableCell>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="opacity-0 group-hover:opacity-100 transition-opacity"
-                            onClick={() => handleAppClick(renewal)}
-                          >
-                            <BarChart className="h-4 w-4" />
-                          </Button>
-                        </TableCell>
-                      </TableRow>
-                    ))
+                    sortedRenewals.map((renewal) => {
+                      const { activePercent, unassigned } = getUsageStats(renewal);
+                      return (
+                        <TableRow key={renewal.id} className="group hover:bg-muted/30 cursor-pointer" onClick={() => handleAppClick(renewal)}>
+                          <TableCell className="w-12">
+                            <div className="w-8 h-8 overflow-hidden rounded-md bg-white border flex items-center justify-center">
+                              <img 
+                                src={renewal.icon} 
+                                alt={`${renewal.name} logo`} 
+                                className="w-6 h-6 object-contain"
+                              />
+                            </div>
+                          </TableCell>
+                          <TableCell className="font-medium">{renewal.name}</TableCell>
+                          <TableCell className="capitalize">{renewal.billingCycle}</TableCell>
+                          <TableCell>{formatRenewalDate(renewal.renewalDate)}</TableCell>
+                          <TableCell>
+                            {renewal.usageData ? (
+                              <div className="flex items-center">
+                                <div className="w-16 bg-gray-200 rounded-full h-2 mr-2">
+                                  <div 
+                                    className="bg-green-500 h-2 rounded-full" 
+                                    style={{ width: `${activePercent}%` }}
+                                  />
+                                </div>
+                                <span className="text-sm">{activePercent}%</span>
+                              </div>
+                            ) : (
+                              <span className="text-sm text-muted-foreground">No data</span>
+                            )}
+                          </TableCell>
+                          <TableCell>
+                            {renewal.usageData ? unassigned : "N/A"}
+                          </TableCell>
+                          <TableCell className="text-right">{formatPrice(renewal.price)}</TableCell>
+                        </TableRow>
+                      );
+                    })
                   ) : (
                     <TableRow>
                       <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
